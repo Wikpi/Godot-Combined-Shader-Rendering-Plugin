@@ -6,7 +6,7 @@ static func get_sprites(root_node) -> Array:
 	var sprite_list: Array = []
 	
 	# Compute a list of only visible sprites
-	if root_node is Sprite && root_node.visible && !root_node.name.begins_with("MergedSprite"):
+	if root_node is Sprite && root_node.visible:
 		sprite_list.append(root_node)
 	
 	# Recursively check each root node child
@@ -37,27 +37,6 @@ static func generate_node_signature(sprites: Array) -> String:
 		]
 	
 	return signature
-
-static func merge_sprites(parent: Node2D, sprites: Array) -> Sprite:
-	var bounds = calculate_sprite_bounds(sprites)
-	var merged_viewport = create_merged_viewport(bounds.size)
-
-	var sprite_container = create_cloned_sprite_container(sprites, bounds.min)
-	
-	merged_viewport.add_child(sprite_container)
-
-	var result_sprite = create_result_sprite(merged_viewport.get_texture(), bounds.size / 2 + bounds.min)
-	
-	var grandparent := parent.get_parent()
-	if grandparent:
-		grandparent.add_child(merged_viewport)
-		grandparent.add_child(result_sprite)
-#		grandparent.call_deferred("add_child", result_sprite)
-
-	if parent.material is ShaderMaterial:
-		result_sprite.material = parent.material.duplicate()
-
-	return result_sprite
 
 static func calculate_sprite_bounds(sprites: Array) -> Dictionary:
 	if sprites.empty():
@@ -92,55 +71,3 @@ static func calculate_sprite_bounds(sprites: Array) -> Dictionary:
 		"min": min_pos,
 		"size": size
 	}
-
-static func create_merged_viewport(size: Vector2) -> Viewport:
-	var viewport := Viewport.new()
-	
-	viewport.name = "MergedViewport"
-	viewport.size = size
-	viewport.transparent_bg = true
-	viewport.render_target_v_flip = true
-	viewport.own_world = true
-	viewport.render_target_update_mode = Viewport.UPDATE_ALWAYS
-	
-	return viewport
-
-static func create_cloned_sprite_container(sprites: Array, offset: Vector2):
-	var container := Node2D.new()
-	container.position = -offset  # Apply offset to align with world origin
-	
-	for sprite in sprites:
-		if !sprite.texture:
-			continue
-
-		var clone := Sprite.new()
-
-		clone.texture = sprite.texture
-		clone.scale = sprite.scale
-		clone.centered = sprite.centered
-		clone.rotation = sprite.rotation
-		clone.modulate = sprite.modulate
-		clone.region_enabled = sprite.region_enabled
-		clone.region_rect = sprite.region_rect
-		
-		clone.transform = sprite.get_global_transform()
-
-		container.add_child(clone)
-
-	return container
-
-static func create_result_sprite(texture: Texture, position: Vector2) -> Sprite:
-	var result := Sprite.new()
-	
-	result.name = "MergedSprite"
-	result.texture = texture
-	result.position = position
-	
-	return result
-
-static func cleanup_node(node) -> void:
-	var grandparent = node.get_parent()
-	
-	for child in grandparent.get_children():
-		if child.name.begins_with("MergedViewport") or child.name.begins_with("MergedSprite"):
-			child.queue_free()

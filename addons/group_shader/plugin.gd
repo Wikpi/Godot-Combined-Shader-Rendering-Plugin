@@ -19,6 +19,9 @@ var plugin_ui
 var tracked_nodes: Array = []
 var merged_data: Dictionary = {} # Cache merged state
 
+var plugin_node_reference = preload("res://addons/group_shader/PluginMergedSprite.tscn")
+var plugin_node_list: Dictionary = {}
+
 # Plugin activation
 func _enter_tree() -> void:
 	if plugin_ui:
@@ -38,10 +41,7 @@ func _exit_tree() -> void:
 		plugin_ui = null
 	
 	for node in tracked_nodes:
-		plugin_tools.cleanup_node(node)
-		
-		merged_data.erase(node)
-		tracked_nodes.clear()
+		cleanup_tracked_node(node)
 
 func process_groups() -> void:
 	if len(tracked_nodes) <= 0:
@@ -50,27 +50,54 @@ func process_groups() -> void:
 	for node in tracked_nodes:
 		if !is_instance_valid(node):
 			continue
+	
+		if !plugin_node_list.has(node):
+			continue
+			
+		var plugin_node = plugin_node_list[node]
 
 		var sprites = plugin_tools.get_sprites(node)
 		var signature = plugin_tools.generate_node_signature(sprites)
 
 		if merged_data.has(node) && merged_data[node] == signature:
-			continue # No change
-
-		plugin_tools.cleanup_node(node)
+			continue
 		
-		merged_data.erase(node)
+		var bounds = plugin_tools.calculate_sprite_bounds(sprites)
 		
-		var result_sprite = plugin_tools.merge_sprites(node, sprites)
+		plugin_node.modify_sprite_material(node.material.duplicate())
+		
+		plugin_node.merge_sprites(sprites, bounds)
 		
 		merged_data[node] = signature
-	
+
+# `add_tracking` starts tracking a new node, which needs a merged sprite.
 func add_tracking(node) -> void:
 	tracked_nodes.append(node)
+	
+	# For each new tracked node create a seperate plugin node, which will display
+	# the merged sprite. Each plugin node will have a reference to the node it is
+	# merging in its name.
+	var new_plugin_node = plugin_node_reference.instance()
+	new_plugin_node.name = "%sMergedSprite" % node.name
+	
+	# Add the new node so that the merged sprite and the original sprite
+	# can be siblings with the merged sprite being on top.
+	node.get_parent().add_child(new_plugin_node)
+	
+	plugin_node_list[node] = new_plugin_node
 
 func remove_tracking(node) -> void:
-	tracked_nodes.erase(node)
-	
-	plugin_tools.cleanup_node(node)
+	cleanup_tracked_node(node)
 
+func cleanup_tracked_node(node) -> void:
+	tracked_nodes.erase(node)
 	merged_data.erase(node)
+	
+	cleanup_plugin_node(node)
+
+func cleanup_plugin_node(node) -> void:
+	var plugin_node = plugin_node_list[node]
+	
+	plugin_node_list.erase(plugin_node.name)
+	
+	plugin_node.queue_free()
