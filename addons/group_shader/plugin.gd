@@ -1,42 +1,71 @@
 tool
 extends EditorPlugin
 
-var plugin_ui_reference = preload("res://addons/group_shader/plugin_ui.gd")
-var plugin_ui
+# Reference to the plugin UI script.
+var plugin_ui_reference: GDScript = preload("res://addons/group_shader/PluginUI.gd")
+# Current plugin UI script instance.
+var plugin_ui: EditorInspectorPlugin
 
-var plugin_track_reference = preload("res://addons/group_shader/plugin_track.gd")
-var plugin_track
+# Reference to the plugin tracking script.
+var plugin_track_reference: GDScript = preload("res://addons/group_shader/PluginTrack.gd")
+# Current plugin tracking script instance.
+var plugin_track: EditorPlugin
 
-var plugin_clean_reference = preload("res://addons/group_shader/plugin_clean.gd")
-var plugin_clean
+# Reference to the plugin cleaning script.
+var plugin_clean_reference: GDScript = preload("res://addons/group_shader/PluginClean.gd")
+# Current plugin cleaning script instance.
+var plugin_clean: EditorPlugin
 
-# Plugin activation
+# Reference to the static helper plugin tools.
+var plugin_tools: GDScript = preload("res://addons/group_shader/PluginTools.gd")
+
+# -------------------------------------------------------------
+# =================== Main Methods ============================
+# -------------------------------------------------------------
+
+# Plugin activation.
 func _enter_tree() -> void:
+	# Instantiate plugin scripts
 	initialize_plugin()
 	
+	# Add plugin UI
 	add_inspector_plugin(plugin_ui)
 	
+	# Add idle timer processing
 	get_tree().connect("idle_frame", self, "process_plugin")
 
-# Plugin deactivation
+# Plugin deactivation.
 func _exit_tree() -> void:
+	# Remove plugin UI
 	remove_inspector_plugin(plugin_ui)
 	
+	# Remove the idle timer processing
+	get_tree().disconnect("idle_frame", self, "process_plugin")
+	
+	# Full plugin clean
 	plugin_clean.cleanup()
 
-# On manual plugin disable remove any leftover traces of the plugin. 
+# Manual plugin deactivation.
 func disable_plugin() -> void:
+	# Only on manual plugin disable remove any leftover traces of the plugin. 
 	plugin_clean.cleanup_meta()
 
+# -------------------------------------------------------------
+# ================= Helper Methods ============================
+# -------------------------------------------------------------
+
+# `process_plugin` acts as a process method for the plugin.
 func process_plugin() -> void:
+	# Check if plugin tracked nodes need to be restored
 	plugin_track.restore_tracking()
 
+# `initialize_plugin` establishes plugin state on startup.
 func initialize_plugin() -> void:
 	plugin_ui = plugin_ui_reference.new()
-	plugin_ui.plugin_script = self
+	plugin_ui.plugin_script = self # Pass self reference
 	
 	plugin_track = plugin_track_reference.new()
-	plugin_track.plugin_script = self
+	plugin_track.plugin_script = self # Pass self reference
 	
 	plugin_clean = plugin_clean_reference.new()
-	plugin_clean.plugin_script = self
+	plugin_clean.plugin_script = self # Pass self reference

@@ -17,7 +17,7 @@ __meta__ = {
 material = ExtResource( 2 )
 texture = ExtResource( 1 )
 __meta__ = {
-"merge_enabled": true
+"combined_shading": false,
 }
 
 [node name="Icon2" type="Sprite" parent="Node2D/Icon"]
