@@ -84,6 +84,7 @@ func make_checkbox(object) -> HBoxContainer:
 	# --- Checkbox
 	var cb = CheckBox.new()
 	cb.focus_mode = Control.FOCUS_NONE
+
 	cb.pressed = object.get_meta("merge_enabled", false)
 	cb.align = Label.ALIGN_LEFT
 	

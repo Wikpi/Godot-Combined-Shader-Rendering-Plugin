@@ -1,103 +1,86 @@
 tool
 extends EditorPlugin
 
-var checkbox: CheckBox
-var checkbox_status: bool
-
-var viewport: Viewport
-var sprite: Sprite
-
-var shader
-
-var plugin_location: int = CONTAINER_PROPERTY_EDITOR_BOTTOM
-
-var plugin_tools = preload("res://addons/group_shader/plugin_tools.gd")
-
-var plugin_ui_preload = preload("res://addons/group_shader/plugin_ui.gd")
+var plugin_ui_reference = preload("res://addons/group_shader/plugin_ui.gd")
 var plugin_ui
 
-var tracked_nodes: Array = []
-var merged_data: Dictionary = {} # Cache merged state
+var tracked_nodes: Dictionary = {}
 
 var plugin_node_reference = preload("res://addons/group_shader/PluginMergedSprite.tscn")
-var plugin_node_list: Dictionary = {}
+
+var current_root
 
 # Plugin activation
 func _enter_tree() -> void:
-	if plugin_ui:
-		return
-	
-	plugin_ui = plugin_ui_preload.new()
+	plugin_ui = plugin_ui_reference.new()
 	plugin_ui.plugin = self
 	
 	add_inspector_plugin(plugin_ui)
 	
-	get_tree().connect("idle_frame", self, "process_groups")
+	get_tree().connect("idle_frame", self, "process_plugin")
 
 # Plugin deactivation
 func _exit_tree() -> void:
-	if plugin_ui:
-		remove_inspector_plugin(plugin_ui)
-		plugin_ui = null
+	remove_inspector_plugin(plugin_ui)
 	
 	for node in tracked_nodes:
 		cleanup_tracked_node(node)
 
-func process_groups() -> void:
-	if len(tracked_nodes) <= 0:
+# On manual plugin disable remove any leftover traces of the plugin. 
+func disable_plugin():
+	for node in tracked_nodes.keys():
+		node.set_meta("merge_enabled", null)
+
+func process_plugin():
+	var new_root = get_editor_interface().get_edited_scene_root()
+	if !new_root || new_root == current_root:
+		return
+
+	current_root = new_root
+	
+	restore_tracking(current_root)
+
+func restore_tracking(root):
+	if !(root is Node2D):
 		return
 	
-	for node in tracked_nodes:
-		if !is_instance_valid(node):
-			continue
-	
-		if !plugin_node_list.has(node):
-			continue
-			
-		var plugin_node = plugin_node_list[node]
+	if root.has_meta("merge_enabled") and root.get_meta("merge_enabled"):
+		add_tracking(root)
 
-		var sprites = plugin_tools.get_sprites(node)
-		var signature = plugin_tools.generate_node_signature(sprites)
-
-		if merged_data.has(node) && merged_data[node] == signature:
-			continue
-		
-		var bounds = plugin_tools.calculate_sprite_bounds(sprites)
-		
-		plugin_node.modify_sprite_material(node.material.duplicate())
-		
-		plugin_node.merge_sprites(sprites, bounds)
-		
-		merged_data[node] = signature
+	for child in root.get_children():
+		restore_tracking(child)
 
 # `add_tracking` starts tracking a new node, which needs a merged sprite.
 func add_tracking(node) -> void:
-	tracked_nodes.append(node)
-	
 	# For each new tracked node create a seperate plugin node, which will display
 	# the merged sprite. Each plugin node will have a reference to the node it is
 	# merging in its name.
 	var new_plugin_node = plugin_node_reference.instance()
 	new_plugin_node.name = "%sMergedSprite" % node.name
+	new_plugin_node.root_node = node
 	
 	# Add the new node so that the merged sprite and the original sprite
 	# can be siblings with the merged sprite being on top.
 	node.get_parent().add_child(new_plugin_node)
 	
-	plugin_node_list[node] = new_plugin_node
+	tracked_nodes[node] = new_plugin_node
 
 func remove_tracking(node) -> void:
 	cleanup_tracked_node(node)
 
 func cleanup_tracked_node(node) -> void:
-	tracked_nodes.erase(node)
-	merged_data.erase(node)
-	
 	cleanup_plugin_node(node)
 
+	for child in node.get_parent().get_children():
+		if !child.name.begins_with("%sMergedSprite" % node.name):
+			continue
+		child.queue_free()
+		
+	tracked_nodes.erase(node)
+
 func cleanup_plugin_node(node) -> void:
-	var plugin_node = plugin_node_list[node]
+	var plugin_node = tracked_nodes[node]
 	
-	plugin_node_list.erase(plugin_node.name)
-	
+	if !is_instance_valid(plugin_node):
+		return
 	plugin_node.queue_free()
