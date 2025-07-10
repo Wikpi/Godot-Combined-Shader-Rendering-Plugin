@@ -10,12 +10,12 @@ config_version=4
 
 [application]
 
-config/name="GroupShader"
+config/name="CompositeShading"
 config/icon="res://demo/data/icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/group_shader/plugin.cfg" )
+enabled=PoolStringArray( "res://addons/composite-shading/plugin.cfg" )
 
 [gui]
 

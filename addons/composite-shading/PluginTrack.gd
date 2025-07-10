@@ -4,7 +4,7 @@ extends EditorPlugin
 # Reference to the root plugin script.
 var plugin_script: EditorPlugin
 # Reference to the custom plugin node object.
-var plugin_node: PackedScene = preload("res://addons/group_shader/PluginMergedSprite.tscn")
+var plugin_node: PackedScene = preload("res://addons/composite-shading/PluginMergedSprite.tscn")
 # A dictionary containing all nodes which currently have the plugin enabled.
 # Key -> Value = (original node) -> (plugin node representation).
 var tracked_nodes: Dictionary = {}

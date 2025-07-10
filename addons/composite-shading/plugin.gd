@@ -2,22 +2,22 @@ tool
 extends EditorPlugin
 
 # Reference to the plugin UI script.
-var plugin_ui_reference: GDScript = preload("res://addons/group_shader/PluginUI.gd")
+var plugin_ui_reference: GDScript = preload("res://addons/composite-shading/PluginUI.gd")
 # Current plugin UI script instance.
 var plugin_ui: EditorInspectorPlugin
 
 # Reference to the plugin tracking script.
-var plugin_track_reference: GDScript = preload("res://addons/group_shader/PluginTrack.gd")
+var plugin_track_reference: GDScript = preload("res://addons/composite-shading/PluginTrack.gd")
 # Current plugin tracking script instance.
 var plugin_track: EditorPlugin
 
 # Reference to the plugin cleaning script.
-var plugin_clean_reference: GDScript = preload("res://addons/group_shader/PluginClean.gd")
+var plugin_clean_reference: GDScript = preload("res://addons/composite-shading/PluginClean.gd")
 # Current plugin cleaning script instance.
 var plugin_clean: EditorPlugin
 
 # Reference to the static helper plugin tools.
-var plugin_tools: GDScript = preload("res://addons/group_shader/PluginTools.gd")
+var plugin_tools: GDScript = preload("res://addons/composite-shading/PluginTools.gd")
 
 # -------------------------------------------------------------
 # =================== Main Methods ============================

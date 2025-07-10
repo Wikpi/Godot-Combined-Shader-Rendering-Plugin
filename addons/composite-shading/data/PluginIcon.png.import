@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/PluginIcon.png-3136f81dacf4cd8849d9a333d4e7e760.stex"
+path="res://.import/PluginIcon.png-aab98d26bd8fbcadf03b57fc71446853.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/group_shader/data/PluginIcon.png"
-dest_files=[ "res://.import/PluginIcon.png-3136f81dacf4cd8849d9a333d4e7e760.stex" ]
+source_file="res://addons/composite-shading/data/PluginIcon.png"
+dest_files=[ "res://.import/PluginIcon.png-aab98d26bd8fbcadf03b57fc71446853.stex" ]
 
 [params]
 

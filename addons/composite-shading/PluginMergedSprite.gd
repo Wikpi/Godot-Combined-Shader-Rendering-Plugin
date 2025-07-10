@@ -7,7 +7,7 @@ onready var merged_sprite: Sprite = $Sprite
 onready var viewport_sprites: Node2D = $Viewport/Sprites
 
 # Reference to the static helper plugin tools.
-var plugin_tools: GDScript = preload("res://addons/group_shader/PluginTools.gd")
+var plugin_tools: GDScript = preload("res://addons/composite-shading/PluginTools.gd")
 # Root node that the custom plugin node is copying/merging.
 var root_node: Node2D
 # Custom node unique instance signature. 

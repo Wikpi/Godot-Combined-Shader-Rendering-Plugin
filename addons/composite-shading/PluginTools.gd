@@ -2,9 +2,9 @@ tool
 extends EditorPlugin
 
 # The meta data label that is attached to a node which has the plugin enabled.
-const tracked_node_meta: String = "combined_shading"
+const tracked_node_meta: String = "composite_shading"
 # A part of the custom plugin node name. The full name would result in: [node.name]plugin_node_suffix.
-const plugin_node_suffix: String = "CombinedShader"
+const plugin_node_suffix: String = "CompositeShadingSprite"
 
 # -------------------------------------------------------------
 # ===================== Tools =================================
