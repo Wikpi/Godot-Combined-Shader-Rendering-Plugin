@@ -1,0 +1,149 @@
+tool
+extends EditorInspectorPlugin
+
+# Reference to the root plugin script.
+var plugin_script: EditorPlugin
+
+# The size of the plugin UI header.
+var header_min_size: Vector2 = Vector2(0, 23)
+# The background color of the plugin UI header.
+var header_bg_color: Color = Color(0.235, 0.247, 0.267)
+# The text of the plugin UI header.
+var header_text: String = "Combined Shader Rendering"
+
+# The text of the plugin UI checkbox.
+var text_label_text: String = "Enable Combined Shading"
+# The color of the plugin UI checkbox text.
+var text_label_color: Color = Color(0.553, 0.557, 0.561)
+# The tooltip of the plugin UI checkbox text.
+var text_label_tooltip: String = """
+	When enabled, this plugin gathers all visible Sprite nodes under this Node2D,
+	renders them into an off‑screen Viewport, and displays the result as a single composite Sprite.
+	Any CanvasItem material or shader you assign here will automatically be applied to the entire group
+	and will update in real time as child sprites move, change, or toggle visibility.
+"""
+
+
+# -------------------------------------------------------------
+# =================== Main Methods ============================
+# -------------------------------------------------------------
+
+# Determines which objects have access to the plugin inspector UI.
+func can_handle(object) -> bool:
+	return object is Node2D
+
+# Displays the plugin inspector UI.
+func parse_begin(object) -> void:
+	# Plugin UI header container
+	var header: Control = make_header()
+
+	add_custom_control(header)
+
+	# Plugin UI checkbox container
+	var checkbox: HBoxContainer = make_checkbox(object)
+
+	add_custom_control(checkbox)
+
+# -------------------------------------------------------------
+# ================= Helper Methods ============================
+# -------------------------------------------------------------
+
+# `make_header` creates a new plugin UI header container.
+func make_header() -> Control:
+	# The final header container object
+	var container: Control = Control.new()
+	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.size_flags_vertical   = Control.SIZE_FILL
+	container.rect_min_size = header_min_size
+
+	# Header background color object
+	var bg: ColorRect = ColorRect.new()
+	bg.color = header_bg_color
+	bg.anchor_right  = 1
+	bg.anchor_bottom = 1
+	container.add_child(bg)
+
+	# Header text object
+	var header: Label = create_label(header_text)
+	header.align  = Label.ALIGN_CENTER
+	header.valign = Label.VALIGN_CENTER
+	header.anchor_right  = 1
+	header.anchor_bottom = 1
+	container.add_child(header)
+	
+	return container
+
+# `make_checkbox` creatse a new plugin UI checkbox container.
+func make_checkbox(object: Node2D) -> HBoxContainer:
+	# The final overall checkbox container
+	var checkbox_container: HBoxContainer = create_hbox()
+
+	# Checkbox text label object
+	var text_label: Label = create_label(text_label_text, text_label_color)
+	text_label.hint_tooltip = text_label_tooltip # Tooltip on text hover
+	text_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	checkbox_container.add_child(text_label)
+	
+	# Container to store the full checkbox button
+	var checkbox_button: HBoxContainer = create_hbox()
+
+	# Checkbox button object
+	var checkbox: CheckBox = CheckBox.new()
+	checkbox.focus_mode = Control.FOCUS_NONE
+	checkbox.pressed = object.get_meta(plugin_script.plugin_tools.tracked_node_meta, false)
+	checkbox.align = Label.ALIGN_LEFT
+	checkbox_button.add_child(checkbox)
+
+	# Checkbox button text label object
+	var on_label: Label = create_label("On", text_label_color)
+	checkbox_button.add_child(on_label)
+	
+	# Methods to handle checkbox `toggle` signal
+	checkbox.connect("toggled", self, "handle_new_node_tracking", [object])
+	checkbox.connect("toggled", self, "handle_on_label", [on_label])
+	
+	# Update checkbox label on initial load
+	handle_on_label(checkbox.pressed, on_label)
+
+	checkbox_container.add_child(checkbox_button)
+
+	return checkbox_container
+
+# `create_label` makes a new default label with provided text and color.
+func create_label(text: String, color: Color = Color(1, 1, 1)) -> Label:
+	var new_label: Label = Label.new()
+	
+	new_label.text = text
+	new_label.add_color_override("font_color", color)
+	new_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	new_label.align = Label.ALIGN_LEFT
+
+	return new_label
+
+# `create_hbox` makes a new default HBoxContainer. 
+func create_hbox() -> HBoxContainer:
+	var new_hbox: HBoxContainer = HBoxContainer.new()
+	new_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	return new_hbox
+
+# `handle_new_node_tracking` enables or disables the plugin effect on a new specified node.
+# This method is `checkbox` `toggled` signal handler.
+func handle_new_node_tracking(status: bool, node: Node2D) -> void:
+	# Sets according meta data for the node
+	node.set_meta(plugin_script.plugin_tools.tracked_node_meta, status)
+
+	# Add or remove the node from tracked list
+	if status:
+		plugin_script.plugin_track.add_tracking(node)
+	else:
+		plugin_script.plugin_track.remove_tracking(node)
+
+# `handle_on_label` sets the respective color for the checkbox "on" label text.
+# This method is `checkbox` `toggled` signal handler.
+func handle_on_label(status: bool, label: Label) -> void:
+	if status:
+		#on_label.add_color_override("font_color", Color(0.36, 0.69, 1))
+		label.add_color_override("font_color", Color(0.988, 0.42, 0.847))
+	else:
+		label.add_color_override("font_color", Color(0.553, 0.557, 0.561))
