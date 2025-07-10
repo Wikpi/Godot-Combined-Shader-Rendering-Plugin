@@ -1,7 +1,7 @@
 tool
 extends EditorInspectorPlugin
 
-var plugin
+var plugin_script
 
 var inspected_nodes := {}
 
@@ -12,7 +12,7 @@ func parse_begin(object):
 	if inspected_nodes.has(object):
 		return
 	inspected_nodes[object] = true
-	
+
 	var header = make_header()
 
 	add_custom_control(header)
@@ -111,9 +111,9 @@ func handle_checkbox_toggle(status: bool, node):
 	node.set_meta("merge_enabled", status)
 
 	if status:
-		plugin.add_tracking(node)
+		plugin_script.plugin_track.add_tracking(node)
 	else:
-		plugin.remove_tracking(node)
+		plugin_script.plugin_track.remove_tracking(node)
 
 func _update_on_label(pressed: bool, on_label: Label) -> void:
 	# Fake inspector accent color: light blue
