@@ -73,7 +73,9 @@ func make_header():
 
 	# Header icon object
 	var icon = TextureRect.new()
-	icon.texture = load("res://addons/composite-shading/data/PluginIcon.png")
+	if plugin_script:
+		icon.texture = load(plugin_script.plugin_tools.plugin_icon_path)
+	
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	hbox.add_child(icon)
 	

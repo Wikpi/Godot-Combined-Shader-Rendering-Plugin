@@ -5,6 +5,8 @@ extends EditorPlugin
 const tracked_node_meta: String = "composite_shading"
 # A part of the custom plugin node name. The full name would result in: [node.name]plugin_node_suffix.
 const plugin_node_suffix: String = "CompositeShadingSprite"
+# Path to the custom plugin icon.
+const plugin_icon_path: String = "res://addons/composite-shading/data/PluginIcon.png"
 
 # -------------------------------------------------------------
 # ===================== Tools =================================
