@@ -10,9 +10,11 @@ var header_min_size: Vector2 = Vector2(0, 23)
 var header_bg_color: Color = Color(0.235, 0.247, 0.267)
 # The text of the plugin UI header.
 var header_text: String = "Composite Shader Rendering"
+# The text color for the plugin UI header.
+var header_text_color: Color = Color(0.733, 0.737, 0.749)
 
 # The text of the plugin UI checkbox.
-var text_label_text: String = "Enable Composite Shading"
+var text_label_text: String = "Composite Shading"
 # The color of the plugin UI checkbox text.
 var text_label_color: Color = Color(0.553, 0.557, 0.561)
 # The tooltip of the plugin UI checkbox text.
@@ -23,6 +25,12 @@ var text_label_tooltip: String = """
 	and will update in real time as child sprites move, change, or toggle visibility.
 """
 
+# The size of the plugin checkbox.
+var checkbox_min_size: Vector2 = Vector2(0, 23)
+# The background color of the plugin UI checkbox.
+var checkbox_bg_color: Color = Color(0.11, 0.122, 0.137)
+# The text color of the plugin UI checkbox.
+var checkbox_label_color: Color = Color(0.667, 0.671, 0.682)
 
 # -------------------------------------------------------------
 # =================== Main Methods ============================
@@ -49,29 +57,34 @@ func parse_begin(object) -> void:
 # -------------------------------------------------------------
 
 # `make_header` creates a new plugin UI header container.
-func make_header() -> Control:
-	# The final header container object
-	var container: Control = Control.new()
-	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.size_flags_vertical   = Control.SIZE_FILL
-	container.rect_min_size = header_min_size
-
-	# Header background color object
-	var bg: ColorRect = ColorRect.new()
-	bg.color = header_bg_color
-	bg.anchor_right  = 1
-	bg.anchor_bottom = 1
-	container.add_child(bg)
-
-	# Header text object
-	var header: Label = create_label(header_text)
-	header.align  = Label.ALIGN_CENTER
-	header.valign = Label.VALIGN_CENTER
-	header.anchor_right  = 1
-	header.anchor_bottom = 1
-	container.add_child(header)
+func make_header():
+	# Stores the full header: background and header
+	var header_container = create_control(header_min_size)
 	
-	return container
+	# Header colored background object
+	var bg = create_color_rect(header_bg_color)
+	header_container.add_child(bg)
+	
+	# Sores centered header text and icon
+	var hbox: HBoxContainer = create_hbox()
+	hbox.anchor_right  = 1
+	hbox.anchor_bottom = 1
+	hbox.alignment = BoxContainer.ALIGN_CENTER
+
+	# Header icon object
+	var icon = TextureRect.new()
+	icon.texture = load("res://addons/composite-shading/data/PluginIcon.png")
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	hbox.add_child(icon)
+	
+	# Header text object
+	var header: Label = create_label(header_text, header_text_color)
+	header.size_flags_horizontal = Control.SIZE_FILL # Remove default expand flag
+	hbox.add_child(header)
+	
+	header_container.add_child(hbox)
+	
+	return header_container
 
 # `make_checkbox` creatse a new plugin UI checkbox container.
 func make_checkbox(object: Node2D) -> HBoxContainer:
@@ -84,6 +97,13 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	text_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	checkbox_container.add_child(text_label)
 	
+	# Container which will hold the background and the full checkbox button
+	var container: Control = create_control(checkbox_min_size)
+	
+	# Checkbox button background
+	var bg: ColorRect = create_color_rect(checkbox_bg_color)
+	container.add_child(bg)
+	
 	# Container to store the full checkbox button
 	var checkbox_button: HBoxContainer = create_hbox()
 
@@ -95,7 +115,7 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	checkbox_button.add_child(checkbox)
 
 	# Checkbox button text label object
-	var on_label: Label = create_label("On", text_label_color)
+	var on_label: Label = create_label("On", checkbox_label_color)
 	checkbox_button.add_child(on_label)
 	
 	# Methods to handle checkbox `toggle` signal
@@ -105,9 +125,34 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	# Update checkbox label on initial load
 	handle_on_label(checkbox.pressed, on_label)
 
-	checkbox_container.add_child(checkbox_button)
+	container.add_child(checkbox_button)
+
+	checkbox_container.add_child(container)
 
 	return checkbox_container
+
+# `create_control` makes a new default Control with the provided size.
+func create_control(size: Vector2) -> Control:
+	var new_control: Control = Control.new()
+	
+	new_control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	new_control.size_flags_vertical = Control.SIZE_FILL
+	
+	new_control.rect_min_size = size
+
+	return new_control
+
+# `create_color_rect` makes a new default ColorRect with the provided color value.
+func create_color_rect(color: Color) -> ColorRect:
+	var new_color_rect: ColorRect = ColorRect.new()
+	
+	new_color_rect.color = color
+	new_color_rect.anchor_right  = 1
+	new_color_rect.anchor_bottom = 1
+	new_color_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	new_color_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	
+	return new_color_rect
 
 # `create_label` makes a new default label with provided text and color.
 func create_label(text: String, color: Color = Color(1, 1, 1)) -> Label:
