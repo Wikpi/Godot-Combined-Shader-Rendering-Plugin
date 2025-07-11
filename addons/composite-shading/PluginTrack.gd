@@ -14,7 +14,7 @@ class TrackedNode:
 # Reference to the root plugin script.
 var plugin_script: EditorPlugin
 # Reference to the custom plugin node object.
-var plugin_node: PackedScene = preload("res://addons/composite-shading/PluginMergedSprite.tscn")
+var plugin_node: PackedScene = preload("res://addons/composite-shading/CompositeShadingSprite.tscn")
 # A dictionary containing all nodes which currently have the plugin enabled.
 # Key -> Value = (original node) -> (TrackedNode class object).
 var tracked_nodes: Dictionary = {}
