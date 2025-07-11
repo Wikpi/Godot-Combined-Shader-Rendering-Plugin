@@ -1,12 +1,22 @@
 tool
 extends EditorPlugin
 
+class TrackedNode:
+	var node: Node2D
+	var parent_node: Node
+	var plugin_node: Node2D
+
+	func _init(new_node: Node2D, new_parent_node: Node, new_plugin_node: Node2D) -> void:
+		node = new_node
+		parent_node = new_parent_node
+		plugin_node = new_plugin_node
+
 # Reference to the root plugin script.
 var plugin_script: EditorPlugin
 # Reference to the custom plugin node object.
 var plugin_node: PackedScene = preload("res://addons/composite-shading/PluginMergedSprite.tscn")
 # A dictionary containing all nodes which currently have the plugin enabled.
-# Key -> Value = (original node) -> (plugin node representation).
+# Key -> Value = (original node) -> (TrackedNode class object).
 var tracked_nodes: Dictionary = {}
 # Reference to the current scene root.
 var current_root: Node
@@ -26,6 +36,14 @@ func restore_tracking() -> void:
 	
 	restore_node_tracking(current_root)
 
+# `check_tracking` validates currently tracked nodes 
+# and removes leftovers for any invalid nodes.
+func check_tracking() -> void:
+	for node in tracked_nodes:
+		if is_instance_valid(node) && node.is_inside_tree():
+			continue
+		remove_tracking(node)
+
 # `add_tracking` starts tracking a new node, which needs a merged sprite.
 func add_tracking(new_node: Node2D) -> void:
 	if tracked_nodes.has(new_node):
@@ -42,10 +60,15 @@ func add_tracking(new_node: Node2D) -> void:
 	# can be siblings with the merged sprite being on top.
 	new_node.get_parent().add_child(new_plugin_node)
 	
-	tracked_nodes[new_node] = new_plugin_node
+	var new_tracked_node: TrackedNode = TrackedNode.new(new_node, new_node.get_parent(), new_plugin_node)
+	
+	tracked_nodes[new_node] = new_tracked_node
 
 # `remove_tracking` fully removes any plugin effect on the specified node.
 func remove_tracking(new_node: Node2D) -> void:
+	if !tracked_nodes.has(new_node):
+		return
+	
 	plugin_script.plugin_clean.cleanup_tracked_node(new_node)
 	
 	# Erase dictionary entry at the end to allow for dictionary value grabbing beforehand.

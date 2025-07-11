@@ -59,6 +59,9 @@ func process_plugin() -> void:
 	# Check if plugin tracked nodes need to be restored
 	plugin_track.restore_tracking()
 
+	# Check if custom plugin nodes need to be cleanedup
+	plugin_track.check_tracking()
+
 # `initialize_plugin` establishes plugin state on startup.
 func initialize_plugin() -> void:
 	plugin_ui = plugin_ui_reference.new()
