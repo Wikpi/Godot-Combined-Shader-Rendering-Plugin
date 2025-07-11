@@ -5,8 +5,8 @@ extends EditorPlugin
 var plugin_script: EditorPlugin
 # Dictionary containing nodes which currently have the plugin enabled.
 # Only derived from the PluginTrack.gd script as a reference.
-# Key -> Value = (original node) -> (plugin node representation).
-var tracked_nodes: Dictionary
+# Key -> Value = (original node) -> (TrackedNode class object).
+var tracked_nodes: Dictionary setget , update_tracked_node_list
 
 # -------------------------------------------------------------
 # =================== Main Methods ============================
@@ -14,20 +14,12 @@ var tracked_nodes: Dictionary
 
 # `cleanup` performs a full plugin deep clean.
 func cleanup() -> void:
-	# Update tracked nodes
-	if plugin_script:
-		tracked_nodes = plugin_script.plugin_track.get_tracked_nodes()
-	
-	for node in tracked_nodes:
+	for node in self.tracked_nodes:
 		cleanup_tracked_node(node)
 
 # `cleanup_meta` fully cleans any leftover meta data attached to the tracked nodes.
 func cleanup_meta() -> void:
-	# Update tracked nodes
-	if plugin_script:
-		tracked_nodes = plugin_script.plugin_track.get_tracked_nodes()
-	
-	for node in tracked_nodes:
+	for node in self.tracked_nodes:
 		cleanup_node_meta(node)
 
 # -------------------------------------------------------------
@@ -39,14 +31,17 @@ func cleanup_meta() -> void:
 func cleanup_tracked_node(new_node: Node2D) -> void:
 	if !is_instance_valid(new_node):
 		return
-	
-	if tracked_nodes.has(new_node):
-		# Clean the nodes respective custom plugin node
-		cleanup_plugin_node(tracked_nodes[new_node])
-	
+		
+	# Clean the nodes respective custom plugin node
+	cleanup_plugin_node(new_node)
+
+	cleanup_tracked_node_leftovers(new_node)
+
+# `cleanup_tracked_node_leftovers` removes any residual plugin nodes related to the specified ndoe. 
+func cleanup_tracked_node_leftovers(new_node: Node2D) -> void:
 	# All plugin custom nodes are stored as siblings of the original node
 	# Therefore the parent of the original node will have all the info
-	var node_parent = new_node.get_parent()
+	var node_parent: Node = self.tracked_nodes[new_node].parent_node
 	
 	# Clean up ay residual accidental plugin custom nodes
 	for child in node_parent.get_children():
@@ -57,13 +52,20 @@ func cleanup_tracked_node(new_node: Node2D) -> void:
 		child.queue_free()
 
 # `cleanup_plugin_node` removes leftover custom plugin node for a respective root node.
-func cleanup_plugin_node(new_plugin_node: Node2D) -> void:
-	if !is_instance_valid(new_plugin_node):
+func cleanup_plugin_node(new_node: Node2D) -> void:
+	var plugin_node: Node2D = self.tracked_nodes[new_node].plugin_node
+	
+	if !is_instance_valid(plugin_node):
 		return
-	new_plugin_node.queue_free()
+	plugin_node.queue_free()
 
 # `cleanup_node_meta` removes meta data from a particular node.
 func cleanup_node_meta(new_node: Node2D) -> void:
 	new_node.set_meta(plugin_script.plugin_tools.tracked_node_meta, null)
 
-
+# `update_tracked_node_list` dynamically updates the local trackedd node list.
+# `tracked_nodes` getter function.
+func update_tracked_node_list() -> Dictionary:
+	if plugin_script:
+		tracked_nodes = plugin_script.plugin_track.get_tracked_nodes()
+	return tracked_nodes

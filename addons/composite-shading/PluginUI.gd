@@ -9,10 +9,10 @@ var header_min_size: Vector2 = Vector2(0, 23)
 # The background color of the plugin UI header.
 var header_bg_color: Color = Color(0.235, 0.247, 0.267)
 # The text of the plugin UI header.
-var header_text: String = "Combined Shader Rendering"
+var header_text: String = "Composite Shader Rendering"
 
 # The text of the plugin UI checkbox.
-var text_label_text: String = "Enable Combined Shading"
+var text_label_text: String = "Enable Composite Shading"
 # The color of the plugin UI checkbox text.
 var text_label_color: Color = Color(0.553, 0.557, 0.561)
 # The tooltip of the plugin UI checkbox text.
