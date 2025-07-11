@@ -58,6 +58,7 @@ func disable_plugin() -> void:
 func process_plugin() -> void:
 	# Check if plugin tracked nodes need to be restored
 	plugin_track.restore_tracking()
+
 	# Check if custom plugin nodes need to be cleanedup
 	plugin_track.check_tracking()
 
