@@ -6,18 +6,8 @@ var plugin_ui_reference: GDScript = preload("res://addons/composite-shading/Plug
 # Current plugin UI script instance.
 var plugin_ui: EditorInspectorPlugin
 
-# Reference to the plugin tracking script.
-var plugin_track_reference: GDScript = preload("res://addons/composite-shading/PluginTrack.gd")
-# Current plugin tracking script instance.
-var plugin_track: EditorPlugin
-
-# Reference to the plugin cleaning script.
-var plugin_clean_reference: GDScript = preload("res://addons/composite-shading/PluginClean.gd")
-# Current plugin cleaning script instance.
-var plugin_clean: EditorPlugin
-
-# Reference to the static helper plugin tools.
-var plugin_tools: GDScript = preload("res://addons/composite-shading/PluginTools.gd")
+var plugin_manager_reference: PackedScene = preload("res://addons/composite-shading/CompositeShadingManager.tscn")
+var plugin_manager: Node2D
 
 # -------------------------------------------------------------
 # =================== Main Methods ============================
@@ -25,59 +15,46 @@ var plugin_tools: GDScript = preload("res://addons/composite-shading/PluginTools
 
 # Plugin activation.
 func _enter_tree() -> void:
-	# Instantiate plugin scripts
-	initialize_plugin()
-	
 	# Add plugin UI
+	plugin_ui = plugin_ui_reference.new()
 	add_inspector_plugin(plugin_ui)
 	
-	# Add idle timer processing
-	get_tree().connect("idle_frame", self, "process_plugin")
-	
 	get_tree().connect("node_added", self, "initialise_plugin_manager")
-
-func initialise_plugin_manager(new_node: Node) -> void:
-	# Check if the edited scene has changed by checking if root got re-added
-	if new_node != get_editor_interface().get_edited_scene_root():
-		return
+	initialise_plugin_manager(get_editor_interface().get_edited_scene_root())
 	
-	
-
 # Plugin deactivation.
 func _exit_tree() -> void:
 	# Remove plugin UI
 	remove_inspector_plugin(plugin_ui)
 	
-	# Remove the idle timer processing
-	get_tree().disconnect("idle_frame", self, "process_plugin")
+	if !plugin_manager:
+		return
 	
-	# Full plugin clean
-	plugin_clean.cleanup()
+	plugin_manager.call("handle_exit")
+	
+	plugin_manager.queue_free()
 
 # Manual plugin deactivation.
 func disable_plugin() -> void:
-	# Only on manual plugin disable remove any leftover traces of the plugin. 
-	plugin_clean.cleanup_meta()
+	if !plugin_manager:
+		return
+	plugin_manager.call("handle_disable")
 
 # -------------------------------------------------------------
-# ================= Helper Methods ============================
+# =================== Helper Methods ==========================
 # -------------------------------------------------------------
 
-# `process_plugin` acts as a process method for the plugin.
-func process_plugin() -> void:
-	# Check if plugin tracked nodes need to be restored
-	plugin_track.restore_tracking()
-
-	# Check if custom plugin nodes need to be cleanedup
-	plugin_track.check_tracking()
-
-# `initialize_plugin` establishes plugin state on startup.
-func initialize_plugin() -> void:
-	plugin_ui = plugin_ui_reference.new()
-	plugin_ui.plugin_script = self # Pass self reference
+func initialise_plugin_manager(new_node: Node) -> void:
+	if new_node != get_editor_interface().get_edited_scene_root():
+		return
 	
-	plugin_track = plugin_track_reference.new()
-	plugin_track.plugin_script = self # Pass self reference
+	if plugin_manager:
+		plugin_manager.queue_free()
+
+	var new_plugin_manager: Node2D = plugin_manager_reference.instance()
+	new_plugin_manager.owner = new_node
+	new_node.add_child(new_plugin_manager)
 	
-	plugin_clean = plugin_clean_reference.new()
-	plugin_clean.plugin_script = self # Pass self reference
+	plugin_ui.manager = new_plugin_manager
+	
+	plugin_manager = new_plugin_manager

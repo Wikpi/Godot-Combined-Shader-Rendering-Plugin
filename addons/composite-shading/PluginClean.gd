@@ -1,8 +1,8 @@
 tool
-extends EditorPlugin
+extends Node2D
 
-# Reference to the root plugin script.
-var plugin_script: EditorPlugin
+# Reference to the root plugin manager.
+var manager: Node2D
 # Dictionary containing nodes which currently have the plugin enabled.
 # Only derived from the PluginTrack.gd script as a reference.
 # Key -> Value = (original node) -> (TrackedNode class object).
@@ -47,7 +47,7 @@ func cleanup_tracked_node_leftovers(new_node: Node2D) -> void:
 	for child in node_parent.get_children():
 		# Custom plugin node name follow the pattern: [node_name]MergedSprite
 		# But could potentially have many instances
-		if !child.name.begins_with("%s%s" % [new_node.name, plugin_script.plugin_tools.plugin_node_suffix]):
+		if !child.name.begins_with("%s%s" % [new_node.name, CompositeShadingTools.plugin_node_suffix]):
 			continue
 		child.queue_free()
 
@@ -61,11 +61,11 @@ func cleanup_plugin_node(new_node: Node2D) -> void:
 
 # `cleanup_node_meta` removes meta data from a particular node.
 func cleanup_node_meta(new_node: Node2D) -> void:
-	new_node.set_meta(plugin_script.plugin_tools.tracked_node_meta, null)
+	new_node.set_meta(CompositeShadingTools.tracked_node_meta, null)
 
 # `update_tracked_node_list` dynamically updates the local trackedd node list.
 # `tracked_nodes` getter function.
 func update_tracked_node_list() -> Dictionary:
-	if plugin_script:
-		tracked_nodes = plugin_script.plugin_track.get_tracked_nodes()
+	if manager:
+		tracked_nodes = manager.get_tracked_nodes()
 	return tracked_nodes

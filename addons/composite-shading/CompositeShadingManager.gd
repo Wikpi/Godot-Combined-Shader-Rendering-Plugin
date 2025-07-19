@@ -1,56 +1,77 @@
-#extends Node2D
-#
+extends Node2D
+
 #tool
-#class_name CompositeShadingSprite
-#
-#export(NodePath) var tracked_root_path: NodePath
-#export(bool) var enabled := true
-#
-#var viewport := null
-#var texture_sprite := null
-#
-#func _ready():
-#	if Engine.is_editor_hint():
+class_name CompositeShadingManager
+
+# Reference to the plugin tracking script.
+var plugin_track_reference: GDScript = preload("res://addons/composite-shading/PluginTrack.gd")
+# Current plugin tracking script instance.
+var plugin_track: Node2D
+
+# Reference to the plugin cleaning script.
+var plugin_clean_reference: GDScript = preload("res://addons/composite-shading/PluginClean.gd")
+# Current plugin cleaning script instance.
+var plugin_clean: Node2D
+
+# Reference to the static helper plugin tools.
+var plugin_tools: GDScript = preload("res://addons/composite-shading/PluginTools.gd")
+
+# -------------------------------------------------------------
+# =================== Main Methods ============================
+# -------------------------------------------------------------
+
+func _enter_tree() -> void:
+	plugin_track = plugin_track_reference.new()
+	plugin_track.manager = self # Pass self reference
+	
+	plugin_clean = plugin_clean_reference.new()
+	plugin_clean.manager = self # Pass self reference
+	print("need to add back")
+	# Check if plugin tracked nodes need to be restored
+	plugin_track.restore_node_tracking(get_parent())
+	
+	set_process(true)
+	
+func _process(_delta) -> void:
+#	if !plugin_track:
 #		return
-#
-#	if not enabled:
-#		return
-#
-#	setup_composite_runtime()
-#
-#func setup_composite_runtime():
-#	if not tracked_root_path:
-#		printerr("CompositeShadingSprite: No tracked root path set")
-#		return
-#
-#	var tracked_node = get_node_or_null(tracked_root_path)
-#	if not tracked_node:
-#		printerr("CompositeShadingSprite: Tracked node not found")
-#		return
-#
-#	setup_viewport(tracked_node)
-#	update_composite_position(tracked_node)
-#
-#func setup_viewport(target_node):
-#	if viewport:
-#		viewport.queue_free()
-#	if texture_sprite:
-#		texture_sprite.queue_free()
-#
-#	viewport = Viewport.new()
-#	viewport.size = target_node.get_combined_minimum_size()
-#	viewport.disable_3d = true
-#	viewport.transparent_bg = true
-#	viewport.render_target_update_mode = Viewport.UPDATE_ALWAYS
-#	add_child(viewport)
-#
-#	# Clone target node into viewport
-#	var clone := target_node.duplicate()
-#	viewport.add_child(clone)
-#
-#	texture_sprite = Sprite.new()
-#	texture_sprite.texture = viewport.get_texture()
-#	add_child(texture_sprite)
-#
-#func update_composite_position(tracked_node):
-#	global_position = tracked_node.global_position
+	# Check if custom plugin nodes need to be cleanedup
+#	plugin_track.check_tracking()
+	if !Engine.is_editor_hint():
+		plugin_track.restore_node_tracking(get_parent())
+		print("runtime")
+
+func handle_exit() -> void:
+	if !plugin_clean:
+		return
+	plugin_clean.cleanup()
+
+func handle_disable() -> void:
+	if !plugin_clean:
+		return
+	plugin_clean.cleanup_meta()
+
+func add_tracking(new_node: Node2D) -> void:
+	if !plugin_track:
+		return
+	plugin_track.add_tracked_node(new_node)
+
+func remove_tracking(new_node: Node2D) -> void:
+	if !plugin_track:
+		return
+	plugin_track.remove_tracked_node(new_node)
+
+func cleanup_tracking(new_node: Node2D) -> void:
+	if !plugin_clean:
+		return
+	plugin_clean.cleanup_tracked_node(new_node)
+
+# `get_tracked_nodes` returns the current tracked node list.
+func get_tracked_nodes() -> Dictionary:
+	if !plugin_track:
+		return {}
+	return plugin_track.tracked_nodes
+
+# -------------------------------------------------------------
+# =================== Helper Methods ==========================
+# -------------------------------------------------------------

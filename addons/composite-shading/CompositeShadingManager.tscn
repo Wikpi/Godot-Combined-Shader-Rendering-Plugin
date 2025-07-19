@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/composite-shading/CompositeShadingManager.gd" type="Script" id=1]
+
+[node name="CompositeShadingManager" type="Node2D" groups=["CompositeShadingManager"]]
+script = ExtResource( 1 )

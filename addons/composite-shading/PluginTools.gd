@@ -1,5 +1,7 @@
 tool
-extends EditorPlugin
+extends Node2D
+
+class_name CompositeShadingTools
 
 # The meta data label that is attached to a node which has the plugin enabled.
 const tracked_node_meta: String = "composite_shading"
@@ -96,3 +98,27 @@ static func calculate_sprite_bounds(new_sprites: Array) -> Dictionary:
 		"max": Vector2(max_x, max_y), # Bottom right corner
 		"size": Vector2(max_x - min_x, max_y - min_y).ceil() # Pixel perfect size
 	}
+
+# `get_meta_data` retreives nodes existing meta data field value. 
+static func get_meta_data(new_node: Node2D, field: String, fallback):
+	if !new_node.has_meta(tracked_node_meta):
+		return fallback
+	
+	var meta: Dictionary = new_node.get_meta(tracked_node_meta, null)
+	if !meta:
+		return fallback
+	
+	if !meta.has(field):
+		return fallback
+	
+	return meta.get(field)
+
+# `set_meta_data` updates nodes meta data field.
+static func set_meta_data(new_node: Node2D, field: String, value) -> void:
+	var meta: Dictionary = {}
+	if new_node.has_meta(tracked_node_meta):
+		meta = new_node.get_meta(tracked_node_meta, null)
+	
+	meta[field] = value
+	
+	new_node.set_meta(tracked_node_meta, meta)

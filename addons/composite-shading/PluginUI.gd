@@ -1,8 +1,7 @@
 tool
 extends EditorInspectorPlugin
 
-# Reference to the root plugin script.
-var plugin_script: EditorPlugin
+var manager: Node2D
 
 # The size of the plugin UI header.
 var header_min_size: Vector2 = Vector2(0, 23)
@@ -79,8 +78,7 @@ func make_header():
 
 	# Header icon object
 	var icon = TextureRect.new()
-	if plugin_script:
-		icon.texture = load(plugin_script.plugin_tools.plugin_icon_path)
+	icon.texture = load(CompositeShadingTools.plugin_icon_path)
 	
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	hbox.add_child(icon)
@@ -121,7 +119,7 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	checkbox.align = Label.ALIGN_LEFT
 	checkbox_button.add_child(checkbox)
 
-	checkbox.pressed = plugin_script.plugin_track.get_meta_data(object, "tracked", false)
+	checkbox.pressed = CompositeShadingTools.get_meta_data(object, "tracked", false)
 
 	# Checkbox button text label object
 	var on_label: Label = create_label("On", checkbox_label_color)
@@ -205,20 +203,19 @@ func create_hbox() -> HBoxContainer:
 
 # Handles assigning a new material to the node when changed in inspector
 func update_node_material(new_material: Material, new_node: Node2D) -> void:	
-	plugin_script.plugin_track.set_meta_data(new_node, "material", new_material)
-	
-	plugin_script.plugin_track.update_node_material(new_material, new_node)
+	CompositeShadingTools.set_meta_data(new_node, "material", new_material)
 
 # `handle_new_node_tracking` enables or disables the plugin effect on a new specified node.
 # This method is `checkbox` `toggled` signal handler.
 func handle_new_node_tracking(status: bool, new_node: Node2D) -> void:
-	plugin_script.plugin_track.set_meta_data(new_node, "tracked", status)
-	
+	CompositeShadingTools.set_meta_data(new_node, "tracked", status)
+
 	# Add or remove the node from tracked list
 	if status:
-		plugin_script.plugin_track.add_tracking(new_node)
+		
+		manager.call("add_tracking", new_node)
 	else:
-		plugin_script.plugin_track.remove_tracking(new_node)
+		manager.call("remove_tracking", new_node)
 
 	# Enable or disable material picker
 	if !material_picker:

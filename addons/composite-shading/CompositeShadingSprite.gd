@@ -27,6 +27,7 @@ func _ready():
 	
 	# Sprite could have a reference to teh previous viewport if not fully cleared
 	shading_sprite.texture = null
+	print("enter")
 
 # Only added and ran, when the plugin is enabled for the original node.
 func _process(_delta: float):
@@ -38,10 +39,12 @@ func _process(_delta: float):
 	# Check if any sprites changes since last isntance.
 	var new_signature: String = plugin_tools.generate_node_signature(sprites)
 
+	modify_sprite_material()
+
 	if signature == new_signature:
 		return
 	signature = new_signature
-	
+	printt("modified", name)
 	# New bounding limits for the fetched sprites
 	var bounds: Dictionary = plugin_tools.calculate_sprite_bounds(sprites)
 	
@@ -104,5 +107,7 @@ func clone_sprite(new_sprite: Sprite) -> Sprite:
 	return clone
 
 # `modify_sprite_material` changes the canvas item material for the display sprite.
-func modify_sprite_material(new_material: Material) -> void:
+func modify_sprite_material() -> void:
+	var new_material: Material = CompositeShadingTools.get_meta_data(root_node, "material", null)
+
 	shading_sprite.material = new_material

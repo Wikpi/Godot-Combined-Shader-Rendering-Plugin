@@ -8,9 +8,26 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Node2D",
+"class": "CompositeShadingManager",
+"language": "GDScript",
+"path": "res://addons/composite-shading/CompositeShadingManager.gd"
+}, {
+"base": "Node2D",
+"class": "CompositeShadingTools",
+"language": "GDScript",
+"path": "res://addons/composite-shading/PluginTools.gd"
+} ]
+_global_script_class_icons={
+"CompositeShadingManager": "",
+"CompositeShadingTools": ""
+}
+
 [application]
 
 config/name="CompositeShading"
+run/main_scene="res://demo/DemoScene.tscn"
 config/icon="res://demo/data/icon.png"
 
 [editor_plugins]
