@@ -33,6 +33,15 @@ func _enter_tree() -> void:
 	
 	# Add idle timer processing
 	get_tree().connect("idle_frame", self, "process_plugin")
+	
+	get_tree().connect("node_added", self, "initialise_plugin_manager")
+
+func initialise_plugin_manager(new_node: Node) -> void:
+	# Check if the edited scene has changed by checking if root got re-added
+	if new_node != get_editor_interface().get_edited_scene_root():
+		return
+	
+	
 
 # Plugin deactivation.
 func _exit_tree() -> void:

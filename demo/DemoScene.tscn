@@ -1,18 +1,18 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=2 format=2]
 
 [ext_resource path="res://demo/data/icon.png" type="Texture" id=1]
-[ext_resource path="res://demo/data/ObjectOutline.tres" type="Material" id=2]
 
 [node name="Node2D" type="Node2D"]
 
 [node name="Node2D" type="Node2D" parent="."]
 
 [node name="Icon" type="Sprite" parent="Node2D"]
+position = Vector2( -1, 1 )
 texture = ExtResource( 1 )
 __meta__ = {
 "composite_shading": {
-"material": ExtResource( 2 ),
-"tracked": true
+"material": null,
+"tracked": false
 }
 }
 
