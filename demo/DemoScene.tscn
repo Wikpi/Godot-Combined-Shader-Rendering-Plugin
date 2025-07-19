@@ -4,20 +4,16 @@
 [ext_resource path="res://demo/data/ObjectOutline.tres" type="Material" id=2]
 
 [node name="Node2D" type="Node2D"]
-__meta__ = {
-"merge_enabled": false
-}
 
 [node name="Node2D" type="Node2D" parent="."]
-__meta__ = {
-"merge_enabled": false
-}
 
 [node name="Icon" type="Sprite" parent="Node2D"]
-material = ExtResource( 2 )
 texture = ExtResource( 1 )
 __meta__ = {
-"composite_shading": true
+"composite_shading": {
+"material": ExtResource( 2 ),
+"tracked": true
+}
 }
 
 [node name="Icon2" type="Sprite" parent="Node2D/Icon"]

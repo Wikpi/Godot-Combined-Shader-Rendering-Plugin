@@ -32,6 +32,8 @@ var checkbox_bg_color: Color = Color(0.11, 0.122, 0.137)
 # The text color of the plugin UI checkbox.
 var checkbox_label_color: Color = Color(0.667, 0.671, 0.682)
 
+var material_picker: EditorResourcePicker
+
 # -------------------------------------------------------------
 # =================== Main Methods ============================
 # -------------------------------------------------------------
@@ -51,6 +53,10 @@ func parse_begin(object) -> void:
 	var checkbox: HBoxContainer = make_checkbox(object)
 
 	add_custom_control(checkbox)
+	
+	var material_picker = make_material_picker(object)
+	
+	add_custom_control(material_picker)
 
 # -------------------------------------------------------------
 # ================= Helper Methods ============================
@@ -112,9 +118,10 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	# Checkbox button object
 	var checkbox: CheckBox = CheckBox.new()
 	checkbox.focus_mode = Control.FOCUS_NONE
-	checkbox.pressed = object.get_meta(plugin_script.plugin_tools.tracked_node_meta, false)
 	checkbox.align = Label.ALIGN_LEFT
 	checkbox_button.add_child(checkbox)
+
+	checkbox.pressed = plugin_script.plugin_track.get_meta_data(object, "tracked", false)
 
 	# Checkbox button text label object
 	var on_label: Label = create_label("On", checkbox_label_color)
@@ -132,6 +139,28 @@ func make_checkbox(object: Node2D) -> HBoxContainer:
 	checkbox_container.add_child(container)
 
 	return checkbox_container
+
+# `make_material_picker` creates a CanvasItemMaterial selector field.
+func make_material_picker(object: Node2D) -> Control:
+	var container = create_hbox()
+
+	# Label for the material
+	var label = create_label("Material", text_label_color)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.rect_min_size = Vector2(80, 24)
+	container.add_child(label)
+
+	# Create the resource picker (type-safe to CanvasItemMaterial)
+	material_picker = EditorResourcePicker.new()
+	material_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	material_picker.base_type = "Material"
+	material_picker.editable = false # by default
+
+	material_picker.connect("resource_changed", self, "update_node_material", [object])
+
+	container.add_child(material_picker)
+	
+	return container
 
 # `create_control` makes a new default Control with the provided size.
 func create_control(size: Vector2) -> Control:
@@ -174,17 +203,31 @@ func create_hbox() -> HBoxContainer:
 	
 	return new_hbox
 
+# Handles assigning a new material to the node when changed in inspector
+func update_node_material(new_material: Material, new_node: Node2D) -> void:	
+	plugin_script.plugin_track.set_meta_data(new_node, "material", new_material)
+	
+	plugin_script.plugin_track.update_node_material(new_material, new_node)
+
 # `handle_new_node_tracking` enables or disables the plugin effect on a new specified node.
 # This method is `checkbox` `toggled` signal handler.
-func handle_new_node_tracking(status: bool, node: Node2D) -> void:
-	# Sets according meta data for the node
-	node.set_meta(plugin_script.plugin_tools.tracked_node_meta, status)
-
+func handle_new_node_tracking(status: bool, new_node: Node2D) -> void:
+	plugin_script.plugin_track.set_meta_data(new_node, "tracked", status)
+	
 	# Add or remove the node from tracked list
 	if status:
-		plugin_script.plugin_track.add_tracking(node)
+		plugin_script.plugin_track.add_tracking(new_node)
 	else:
-		plugin_script.plugin_track.remove_tracking(node)
+		plugin_script.plugin_track.remove_tracking(new_node)
+
+	# Enable or disable material picker
+	if !material_picker:
+		return
+	material_picker.editable = status
+	
+	# If enabling, manually re-send the current material to update logic
+	if status:
+		update_node_material(material_picker.edited_resource, new_node)
 
 # `handle_on_label` sets the respective color for the checkbox "on" label text.
 # This method is `checkbox` `toggled` signal handler.

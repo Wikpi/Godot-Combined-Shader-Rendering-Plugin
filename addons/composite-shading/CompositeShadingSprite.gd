@@ -45,11 +45,6 @@ func _process(_delta: float):
 	# New bounding limits for the fetched sprites
 	var bounds: Dictionary = plugin_tools.calculate_sprite_bounds(sprites)
 	
-	# Dont crash the plugin if canvas item material is not present
-	var root_material: Material = root_node.material
-	if root_material:
-		modify_sprite_material(root_material.duplicate())
-	
 	# Adapt viewport to new bounds
 	modify_viewport_bounds(bounds.size, -bounds.min)
 	
@@ -76,13 +71,6 @@ func create_merged_sprite(offset: Vector2) -> void:
 	
 	shading_sprite.texture = new_texture
 	shading_sprite.position = offset
-
-# `modify_sprite_material` change the canvas item material for the display sprite.
-func modify_sprite_material(new_material: Material) -> void:
-	if !(new_material is Material):
-		return
-		
-	shading_sprite.material = new_material
 
 # `modify_viewport_sprite_container` clear old and add new sprites to the viewport.
 func modify_viewport_sprite_container(new_sprites: Array) -> void:
@@ -114,3 +102,7 @@ func clone_sprite(new_sprite: Sprite) -> Sprite:
 	clone.transform = new_sprite.get_global_transform()
 	
 	return clone
+
+# `modify_sprite_material` changes the canvas item material for the display sprite.
+func modify_sprite_material(new_material: Material) -> void:
+	shading_sprite.material = new_material

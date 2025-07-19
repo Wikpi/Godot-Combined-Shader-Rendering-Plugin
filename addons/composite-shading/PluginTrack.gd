@@ -5,6 +5,7 @@ class TrackedNode:
 	var node: Node2D
 	var parent_node: Node
 	var plugin_node: Node2D
+	var material: Material
 
 	func _init(new_node: Node2D, new_parent_node: Node, new_plugin_node: Node2D) -> void:
 		node = new_node
@@ -74,17 +75,53 @@ func remove_tracking(new_node: Node2D) -> void:
 	# Erase dictionary entry at the end to allow for dictionary value grabbing beforehand.
 	tracked_nodes.erase(new_node)
 
+# `update_node_material` updates the tracked node plugin used material.
+func update_node_material(new_material: Material, new_node: Node2D) -> void:
+	if !tracked_nodes.has(new_node):
+		return
+
+	tracked_nodes[new_node].plugin_node.modify_sprite_material(new_material)
+
+# `get_meta_data` retreives nodes existing meta data field value. 
+func get_meta_data(new_node: Node2D, field: String, fallback):
+	if !new_node.has_meta(plugin_script.plugin_tools.tracked_node_meta):
+		return fallback
+	
+	var meta: Dictionary = new_node.get_meta(plugin_script.plugin_tools.tracked_node_meta, null)
+	if !meta:
+		return fallback
+	
+	if !meta.has(field):
+		return fallback
+	
+	return meta.get(field)
+
+# `set_meta_data` updates nodes meta data field.
+func set_meta_data(new_node: Node2D, field: String, value) -> void:
+	var meta: Dictionary = {}
+	if new_node.has_meta(plugin_script.plugin_tools.tracked_node_meta):
+		meta = new_node.get_meta(plugin_script.plugin_tools.tracked_node_meta, null)
+	
+	meta[field] = value
+	
+	new_node.set_meta(plugin_script.plugin_tools.tracked_node_meta, meta)
+
 # -------------------------------------------------------------
 # ================= Helper Methods ============================
 # -------------------------------------------------------------
 
 # `restore_node_tracking` restores all curent scene root nodes which had the plugin enabled.
 func restore_node_tracking(root: Node):
-	var meta_data: String = plugin_script.plugin_tools.tracked_node_meta
-	
-	# Have to check node meta data to determine if it has teh plugin enabled
-	if root.has_meta(meta_data) and root.get_meta(meta_data):
-		add_tracking(root)
+	# Have to check node meta data to determine if it has the plugin enabled
+	if root.has_meta(plugin_script.plugin_tools.tracked_node_meta):
+		var meta = root.get_meta(plugin_script.plugin_tools.tracked_node_meta)
+		if meta:
+			if get_meta_data(root, "tracked", false):
+				add_tracking(root)
+			
+			var material: Material = get_meta_data(root, "material", null)
+			if material:
+				update_node_material(material, root)
 
 	# Recursively check all children
 	for child in root.get_children():
